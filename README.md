@@ -1,6 +1,7 @@
 # chatgpt
 
 CLI application for working with ChatGPT.
+Interactive or file based session with context and moods.
 
 ```
 go install github.com/verdverm/chatgpt@latest
