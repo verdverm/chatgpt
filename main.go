@@ -7,6 +7,7 @@ import (
 	"embed"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 
 	gpt3 "github.com/sashabaranov/go-gpt3"
@@ -54,6 +55,7 @@ var interactiveHelp = `starting interactive session...
 //go:embed pretexts/*
 var predefined embed.FS
 
+var Version bool
 var Question string
 var Pretext string
 var MaxTokens int
@@ -80,6 +82,33 @@ func GetResponse(client *gpt3.Client, ctx context.Context, question string) (str
 	return resp.Choices[0].Text, nil
 }
 
+func printVersion() {
+	info, _ := debug.ReadBuildInfo()
+	GoVersion := info.GoVersion
+	Commit := ""
+	BuildDate := ""
+	dirty := false
+
+	for _, s := range info.Settings {
+		if s.Key == "vcs.revision" {
+			Commit = s.Value
+		}
+		if s.Key == "vcs.time" {
+			BuildDate = s.Value
+		}
+		if s.Key == "vcs.modified" {
+			if s.Value == "true" {
+				dirty = true
+			}
+		}
+	}
+	if dirty {
+		Commit += "+dirty"
+	}
+
+	fmt.Printf("%s %s %s\n", Commit, BuildDate, GoVersion)
+}
+
 type NullWriter int
 
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
@@ -98,6 +127,12 @@ func main() {
 		Short: "Chat with ChatGPT in console.",
 		Long:  LongHelp,
 		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println(Version)
+			if Version {
+				printVersion()
+				os.Exit(0)
+			}
+
 			var err error
 			var filename string
 
@@ -206,6 +241,7 @@ func main() {
 	rootCmd.Flags().BoolVarP(&CleanPrompt, "clean", "c", false, "remove excess whitespace from prompt before sending")
 	rootCmd.Flags().BoolVarP(&WriteBack, "write", "w", false, "write response to end of context file")
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "t", 420, "set the MaxTokens to generate per response")
+	rootCmd.Flags().BoolVarP(&Version, "version", "", false, "print version information")
 
 	rootCmd.Execute()
 }
