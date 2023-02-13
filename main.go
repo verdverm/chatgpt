@@ -27,8 +27,9 @@ Examples:
   chatgpt context.txt -i
   chatgpt context.txt -q "answer me this ChatGPT..."
 
-  # read context from file and write response back
+  # read prompt from file and --write response back
   chatgpt convo.txt
+  chatgpt convo.txt --write
 
   # pipe content from another program, useful for ! in vim visual mode
   cat convo.txt | chatgpt
@@ -58,6 +59,7 @@ var Pretext string
 var MaxTokens int
 var PromptMode bool
 var CleanPrompt bool
+var WriteBack bool
 var PromptText string
 
 func GetResponse(client *gpt3.Client, ctx context.Context, question string) (string, error) {
@@ -202,6 +204,7 @@ func main() {
 	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
 	rootCmd.Flags().BoolVarP(&PromptMode, "interactive", "i", false, "start an interactive session with ChatGPT")
 	rootCmd.Flags().BoolVarP(&CleanPrompt, "clean", "c", false, "remove excess whitespace from prompt before sending")
+	rootCmd.Flags().BoolVarP(&WriteBack, "write", "w", false, "write response to end of context file")
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "t", 420, "set the MaxTokens to generate per response")
 
 	rootCmd.Execute()
@@ -264,7 +267,7 @@ func RunOnce(client *gpt3.Client, filename string) error {
 		return err
 	}
 
-	if filename == "" {
+	if filename == "" || !WriteBack {
 		fmt.Println(r)
 	} else {
 		err = AppendToFile(filename, r)

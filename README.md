@@ -29,8 +29,9 @@ Examples:
   chatgpt context.txt -i
   chatgpt context.txt -q "answer me this ChatGPT..."
 
-  # read context from file and write response back
+  # read prompt from file and --write response back
   chatgpt convo.txt
+  chatgpt convo.txt --write
 
   # pipe content from another program, useful for ! in vim visual mode
   cat convo.txt | chatgpt
@@ -44,9 +45,9 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
-	# extra options
-	chatgpt -t 4096   # set max tokens in reponse
-	chatgpt -c        # clean whitespace before sending
+  # extra options
+  chatgpt -t 4096   # set max tokens in reponse
+  chatgpt -c        # clean whitespace before sending
 
 Usage:
   chatgpt [file] [flags]
@@ -58,5 +59,26 @@ Flags:
   -p, --pretext string    pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text
   -q, --question string   ask a single question and print the response back
   -t, --tokens int        set the MaxTokens to generate per response (default 420)
+  -w, --write             write response to end of context file
 ```
 
+Pretexts:
+
+```
+$ chatgpt -p list
+coding
+cynic
+liar
+optimistic
+sam
+teacher
+thoughtful
+```
+
+Jailbreaking ChatGPT:
+
+https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
+
+Contributions:
+
+Feel free to offer interesting pretexts or anything else
