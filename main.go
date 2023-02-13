@@ -82,7 +82,7 @@ func main() {
 	rootCmd := &cobra.Command{
 		Use:   "chatgpt [file]",
 		Short: "Chat with ChatGPT in console.",
-		Long: LongHelp,
+		Long:  LongHelp,
 		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 			var filename string
@@ -136,11 +136,11 @@ func main() {
 				reader := bufio.NewReader(os.Stdin)
 				var buf bytes.Buffer
 				for {
-						b, err := reader.ReadByte()
-						if err != nil {
-								break
-						}
-						buf.WriteByte(b)
+					b, err := reader.ReadByte()
+					if err != nil {
+						break
+					}
+					buf.WriteByte(b)
 				}
 				PromptText += buf.String()
 			} else if len(args) == 1 {
@@ -171,7 +171,6 @@ func main() {
 
 		},
 	}
-
 
 	rootCmd.Flags().StringVarP(&Question, "question", "q", "", "ask a single question and print the response back")
 	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
@@ -209,7 +208,7 @@ func RunPrompt(client *gpt3.Client) error {
 			fmt.Println(r + "\n")
 		}
 	}
-	
+
 	return nil
 }
 
