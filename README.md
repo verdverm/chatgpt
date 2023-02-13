@@ -8,6 +8,10 @@ go install github.com/verdverm/chatgpt@latest
 chatgpt -h
 ```
 
+Authentication:
+
+Set `CHATGPT_API_KEY`, which you can get here: https://platform.openai.com/account/api-keys
+
 Examples:
 
 ```
