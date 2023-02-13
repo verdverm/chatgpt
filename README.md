@@ -45,8 +45,8 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
-  # extra options
-  chatgpt -t 4096   # set max tokens in reponse
+  # model options
+  chatgpt -T 4096   # set max tokens in reponse
   chatgpt -c        # clean whitespace before sending
 
 Usage:
