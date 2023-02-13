@@ -45,20 +45,38 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
-  # model options
-  chatgpt -T 4096   # set max tokens in reponse
-  chatgpt -c        # clean whitespace before sending
+	# edit mode
+	chatgpt -e ...
+
+	# code mode
+	chatgpt -c ...
+
+	# model options (https://platform.openai.com/docs/api-reference/completions/create)
+	chatgpt -T 4096   # set max tokens in reponse  [0,4096]
+	chatgpt -C        # clean whitespace before sending
+	chatgpt --temp    # set the temperature param  [0.0,2.0]
+	chatgpt --topp    # set the TopP param         [0.0,1.0]
+	chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
+	chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
 
 Usage:
   chatgpt [file] [flags]
 
 Flags:
-  -c, --clean             remove excess whitespace from prompt before sending
+  -x, --clean             remove excess whitespace from prompt before sending
+  -c, --code              request code completion with ChatGPT
+  -C, --count int         set the number of response options to create (default 1)
+  -e, --edit              request an edit with ChatGPT
+      --freq float        set the Frequency Penalty parameter
   -h, --help              help for chatgpt
   -i, --interactive       start an interactive session with ChatGPT
+      --pres float        set the Presence Penalty parameter
   -p, --pretext string    pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text
   -q, --question string   ask a single question and print the response back
-  -t, --tokens int        set the MaxTokens to generate per response (default 420)
+      --temp float        set the temperature parameter (default 1)
+  -T, --tokens int        set the MaxTokens to generate per response (default 1024)
+      --topp float        set the TopP parameter (default 1)
+      --version           print version information
   -w, --write             write response to end of context file
 ```
 
