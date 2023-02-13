@@ -43,19 +43,20 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
-	# edit mode
-	chatgpt -e ...
+  # edit mode
+  chatgpt -e ...
 
-	# code mode
-	chatgpt -c ...
+  # code mode
+  chatgpt -c ...
 
-	# model options (https://platform.openai.com/docs/api-reference/completions/create)
-	chatgpt -T 4096   # set max tokens in reponse  [0,4096]
-	chatgpt -C        # clean whitespace before sending
-	chatgpt --temp    # set the temperature param  [0.0,2.0]
-	chatgpt --topp    # set the TopP param         [0.0,1.0]
-	chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
-	chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
+  # model options (https://platform.openai.com/docs/api-reference/completions/create)
+  chatgpt -T 4096   # set max tokens in reponse  [0,4096]
+  chatgpt -C        # clean whitespace before sending
+  chatgpt -E        # echo back the prompt, useful for vim coding
+  chatgpt --temp    # set the temperature param  [0.0,2.0]
+  chatgpt --topp    # set the TopP param         [0.0,1.0]
+  chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
+  chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
 
 Usage:
   chatgpt [file] [flags]
@@ -64,6 +65,7 @@ Flags:
   -x, --clean             remove excess whitespace from prompt before sending
   -c, --code              request code completion with ChatGPT
   -C, --count int         set the number of response options to create (default 1)
+  -E, --echo              Echo back the prompt, useful for vim coding
   -e, --edit              request an edit with ChatGPT
       --freq float        set the Frequency Penalty parameter
   -h, --help              help for chatgpt

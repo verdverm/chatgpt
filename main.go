@@ -45,19 +45,20 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
-	# edit mode
-	chatgpt -e ...
+  # edit mode
+  chatgpt -e ...
 
-	# code mode
-	chatgpt -c ...
+  # code mode
+  chatgpt -c ...
 
-	# model options (https://platform.openai.com/docs/api-reference/completions/create)
-	chatgpt -T 4096   # set max tokens in reponse  [0,4096]
-	chatgpt -C        # clean whitespace before sending
-	chatgpt --temp    # set the temperature param  [0.0,2.0]
-	chatgpt --topp    # set the TopP param         [0.0,1.0]
-	chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
-	chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
+  # model options (https://platform.openai.com/docs/api-reference/completions/create)
+  chatgpt -T 4096   # set max tokens in reponse  [0,4096]
+  chatgpt -C        # clean whitespace before sending
+  chatgpt -E        # echo back the prompt, useful for vim coding
+  chatgpt --temp    # set the temperature param  [0.0,2.0]
+  chatgpt --topp    # set the TopP param         [0.0,1.0]
+  chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
+  chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
 
 
 `
@@ -72,6 +73,7 @@ var interactiveHelp = `starting interactive session...
   'pres'  set the Presence Penalty   [-2.0,2.0]
   'freq'  set the Frequency Penalty  [-2.0,2.0]
 `
+
 //go:embed pretexts/*
 var predefined embed.FS
 
@@ -90,6 +92,7 @@ var PromptText string
 // chatgpt vars
 var MaxTokens int
 var Count int
+var Echo bool
 var Temp float64
 var TopP float64
 var PresencePenalty float64
@@ -100,15 +103,21 @@ func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question st
 		question = strings.ReplaceAll(question, "\n", " ")
 		question = strings.ReplaceAll(question, "  ", " ")
 	}
+	// insert newline at end to prevent completion of question
+	if !strings.HasSuffix(question, "\n") {
+		question += "\n"
+	}
+
 	req := gpt3.CompletionRequest{
-		Model:     gpt3.GPT3TextDavinci003,
-		MaxTokens: MaxTokens,
-		Prompt:    question,
-		N:           Count,
-		Temperature: float32(Temp),
-		TopP:        float32(TopP),
-		PresencePenalty:        float32(PresencePenalty),
-		FrequencyPenalty:        float32(FrequencyPenalty),
+		Model:            gpt3.GPT3TextDavinci003,
+		MaxTokens:        MaxTokens,
+		Prompt:           question,
+		Echo:             Echo,
+		N:                Count,
+		Temperature:      float32(Temp),
+		TopP:             float32(TopP),
+		PresencePenalty:  float32(PresencePenalty),
+		FrequencyPenalty: float32(FrequencyPenalty),
 	}
 	resp, err := client.CreateCompletion(ctx, req)
 	if err != nil {
@@ -153,15 +162,21 @@ func GetCodeResponse(client *gpt3.Client, ctx context.Context, question string) 
 		question = strings.ReplaceAll(question, "\n", " ")
 		question = strings.ReplaceAll(question, "  ", " ")
 	}
+	// insert newline at end to prevent completion of question
+	if !strings.HasSuffix(question, "\n") {
+		question += "\n"
+	}
+
 	req := gpt3.CompletionRequest{
-		Model:     gpt3.CodexCodeDavinci002,
-		MaxTokens:   MaxTokens,
-		Prompt:      question,
-		N:           Count,
-		Temperature: float32(Temp),
-		TopP:        float32(TopP),
-		PresencePenalty:        float32(PresencePenalty),
-		FrequencyPenalty:        float32(FrequencyPenalty),
+		Model:            gpt3.CodexCodeDavinci002,
+		MaxTokens:        MaxTokens,
+		Prompt:           question,
+		Echo:             Echo,
+		N:                Count,
+		Temperature:      float32(Temp),
+		TopP:             float32(TopP),
+		PresencePenalty:  float32(PresencePenalty),
+		FrequencyPenalty: float32(FrequencyPenalty),
 	}
 	resp, err := client.CreateCompletion(ctx, req)
 	if err != nil {
@@ -258,7 +273,7 @@ func main() {
 					os.Exit(0)
 				}
 
-				// prime prompt with known pretext 
+				// prime prompt with known pretext
 				for _, f := range files {
 					name := strings.TrimSuffix(f.Name(), ".txt")
 					if name == Pretext {
@@ -341,11 +356,11 @@ func main() {
 	// params related
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "T", 1024, "set the MaxTokens to generate per response")
 	rootCmd.Flags().IntVarP(&Count, "count", "C", 1, "set the number of response options to create")
+	rootCmd.Flags().BoolVarP(&Echo, "echo", "E", false, "Echo back the prompt, useful for vim coding")
 	rootCmd.Flags().Float64VarP(&Temp, "temp", "", 1.0, "set the temperature parameter")
 	rootCmd.Flags().Float64VarP(&TopP, "topp", "", 1.0, "set the TopP parameter")
 	rootCmd.Flags().Float64VarP(&PresencePenalty, "pres", "", 0.0, "set the Presence Penalty parameter")
 	rootCmd.Flags().Float64VarP(&FrequencyPenalty, "freq", "", 0.0, "set the Frequency Penalty parameter")
-
 
 	// run the command
 	rootCmd.Execute()
@@ -463,7 +478,6 @@ func RunPrompt(client *gpt3.Client) error {
 			}
 			FrequencyPenalty = f
 			fmt.Println("freq is now", FrequencyPenalty)
-
 
 		default:
 			// add the question to the existing prompt text, to keep context
