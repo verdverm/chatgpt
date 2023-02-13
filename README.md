@@ -9,11 +9,9 @@ go install github.com/verdverm/chatgpt@latest
 chatgpt -h
 ```
 
-Authentication:
-
 Set `CHATGPT_API_KEY`, which you can get here: https://platform.openai.com/account/api-keys
 
-Examples:
+## Examples:
 
 ```
 Chat with ChatGPT in console.
@@ -80,7 +78,7 @@ Flags:
   -w, --write             write response to end of context file
 ```
 
-Pretexts:
+### Pretexts:
 
 ```
 $ chatgpt -p list
@@ -93,10 +91,27 @@ teacher
 thoughtful
 ```
 
-Jailbreaking ChatGPT:
+### Interactive Commands:
+
+```
+$ chatgpt -i
+starting interactive session...
+  'quit' to exit
+  'save <filename>' to preserve
+  'tokens' to change the MaxToken param
+  'count' to change number of responses
+  'temp'  set the temperature param  [0.0,2.0]
+  'topp'  set the TopP param         [0.0,1.0]
+  'pres'  set the Presence Penalty   [-2.0,2.0]
+  'freq'  set the Frequency Penalty  [-2.0,2.0]
+
+>
+```
+
+## Jailbreaking ChatGPT:
 
 https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
 
-Contributions:
+## Contributions:
 
 Feel free to offer interesting pretexts or anything else
