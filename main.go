@@ -43,6 +43,9 @@ Examples:
   chatgpt -p teacher convo.txt
 `
 
+var interactiveHelp = `starting interactive session...
+  'quit' to exit, 'save <filename>' to preserve
+`
 //go:embed pretexts/*
 var predefined embed.FS
 
@@ -50,9 +53,14 @@ var Question string
 var Pretext string
 var MaxTokens int
 var PromptMode bool
+var CleanPrompt bool
 var PromptText string
 
 func GetResponse(client *gpt3.Client, ctx context.Context, question string) (string, error) {
+	if CleanPrompt {
+		question = strings.ReplaceAll(question, "\n", " ")
+		question = strings.ReplaceAll(question, "  ", " ")
+	}
 	req := gpt3.CompletionRequest{
 		Model:     gpt3.GPT3TextDavinci003,
 		MaxTokens: MaxTokens,
@@ -169,6 +177,7 @@ func main() {
 
 			// interactive or file mode
 			if PromptMode {
+				fmt.Println(interactiveHelp)
 				fmt.Println(PromptText)
 				err = RunPrompt(client)
 			} else {
@@ -188,6 +197,7 @@ func main() {
 	rootCmd.Flags().StringVarP(&Question, "question", "q", "", "ask a single question and print the response back")
 	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
 	rootCmd.Flags().BoolVarP(&PromptMode, "interactive", "i", false, "start an interactive session with ChatGPT")
+	rootCmd.Flags().BoolVarP(&CleanPrompt, "clean", "x", false, "remove excess whitespace from prompt before sending")
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "t", 420, "set the MaxTokens to generate per response")
 
 	rootCmd.Execute()
@@ -206,20 +216,34 @@ func RunPrompt(client *gpt3.Client) error {
 		}
 
 		question := scanner.Text()
+
+		if strings.HasPrefix(question, "save") {
+			parts := strings.Fields(question)
+			name := parts[1]
+			fmt.Printf("saving conversation to %s\n", name)
+
+			err := os.WriteFile(name, []byte(PromptText), 0644)
+			if err != nil {
+				return err
+			}
+
+			continue
+		}
+
 		switch question {
 		case "quit", "q", "exit":
 			quit = true
 
 		default:
 			// add the question to the existing prompt text, to keep context
-			PromptText += "\n\n> " + question + "\n"
+			PromptText += "\n> " + question
 			r, err := GetResponse(client, ctx, PromptText)
 			if err != nil {
 				return err
 			}
 
 			// we add response to the prompt, this is how ChatGPT sessions keep context
-			PromptText += "\n" + r + "\n"
+			PromptText += "\n" + strings.TrimSpace(r)
 			// print the latest portion of the conversation
 			fmt.Println(r + "\n")
 		}
