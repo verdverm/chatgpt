@@ -44,10 +44,15 @@ Examples:
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
 
+	# extra options
+	chatgpt -t 4096   # set max tokens in reponse
+	chatgpt -c        # clean whitespace before sending
+
 Usage:
   chatgpt [file] [flags]
 
 Flags:
+  -c, --clean             remove excess whitespace from prompt before sending
   -h, --help              help for chatgpt
   -i, --interactive       start an interactive session with ChatGPT
   -p, --pretext string    pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text

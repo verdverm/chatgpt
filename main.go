@@ -41,6 +41,10 @@ Examples:
   chatgpt -p optimistic -i
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
+
+	# extra options
+	chatgpt -t 4096   # set max tokens in reponse
+	chatgpt -c        # clean whitespace before sending
 `
 
 var interactiveHelp = `starting interactive session...
@@ -197,7 +201,7 @@ func main() {
 	rootCmd.Flags().StringVarP(&Question, "question", "q", "", "ask a single question and print the response back")
 	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
 	rootCmd.Flags().BoolVarP(&PromptMode, "interactive", "i", false, "start an interactive session with ChatGPT")
-	rootCmd.Flags().BoolVarP(&CleanPrompt, "clean", "x", false, "remove excess whitespace from prompt before sending")
+	rootCmd.Flags().BoolVarP(&CleanPrompt, "clean", "c", false, "remove excess whitespace from prompt before sending")
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "t", 420, "set the MaxTokens to generate per response")
 
 	rootCmd.Execute()
