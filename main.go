@@ -87,6 +87,9 @@ func main() {
 			var err error
 			var filename string
 
+			// We build up PromptText as we go, based on flags
+
+			// Handle the pretext flag
 			if Pretext != "" {
 
 				files, err := predefined.ReadDir("pretexts")
@@ -94,6 +97,7 @@ func main() {
 					panic(err)
 				}
 
+				// list and exit
 				if Pretext == "list" {
 					for _, f := range files {
 						fmt.Println(strings.TrimSuffix(f.Name(), ".txt"))
@@ -101,6 +105,7 @@ func main() {
 					os.Exit(0)
 				}
 
+				// print pretext and exit
 				if strings.HasPrefix(Pretext, "view:") {
 					name := strings.TrimPrefix(Pretext, "view:")
 					contents, err := predefined.ReadFile("pretexts/" + name + ".txt")
@@ -112,7 +117,7 @@ func main() {
 					os.Exit(0)
 				}
 
-				// look for predefined
+				// prime prompt with known pretext 
 				for _, f := range files {
 					name := strings.TrimSuffix(f.Name(), ".txt")
 					if name == Pretext {
@@ -126,12 +131,15 @@ func main() {
 					}
 				}
 
+				// prime prompt with custom pretext
 				if PromptText == "" {
 					PromptText = Pretext
 				}
 
 			}
 
+			// no args, interactive, or question... read from stdin
+			// this is mainly for replacing text in vim
 			if len(args) == 0 && !PromptMode && Question == "" {
 				reader := bufio.NewReader(os.Stdin)
 				var buf bytes.Buffer
@@ -144,6 +152,7 @@ func main() {
 				}
 				PromptText += buf.String()
 			} else if len(args) == 1 {
+				// if we have an arg, add it to the prompt
 				filename = args[0]
 				content, err := os.ReadFile(filename)
 				if err != nil {
@@ -153,14 +162,17 @@ func main() {
 				PromptText += string(content)
 			}
 
+			// if there is a question, it comes last in the prompt
 			if Question != "" {
 				PromptText += "\n" + Question
 			}
 
+			// interactive or file mode
 			if PromptMode {
 				fmt.Println(PromptText)
 				err = RunPrompt(client)
 			} else {
+				// empty filename (no args) prints to stdout
 				err = RunOnce(client, filename)
 			}
 
@@ -172,6 +184,7 @@ func main() {
 		},
 	}
 
+	// setup flags
 	rootCmd.Flags().StringVarP(&Question, "question", "q", "", "ask a single question and print the response back")
 	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
 	rootCmd.Flags().BoolVarP(&PromptMode, "interactive", "i", false, "start an interactive session with ChatGPT")
@@ -198,13 +211,16 @@ func RunPrompt(client *gpt3.Client) error {
 			quit = true
 
 		default:
+			// add the question to the existing prompt text, to keep context
 			PromptText += "\n\n> " + question + "\n"
 			r, err := GetResponse(client, ctx, PromptText)
 			if err != nil {
 				return err
 			}
 
+			// we add response to the prompt, this is how ChatGPT sessions keep context
 			PromptText += "\n" + r + "\n"
+			// print the latest portion of the conversation
 			fmt.Println(r + "\n")
 		}
 	}
