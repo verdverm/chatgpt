@@ -110,9 +110,10 @@ starting interactive session...
 >
 ```
 
-## Jailbreaking ChatGPT:
+## Prompt Engineering:
 
-https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
+- https://github.com/dair-ai/Prompt-Engineering-Guide
+- https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
 
 ## Contributions:
 
