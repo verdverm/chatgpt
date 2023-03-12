@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	gpt3 "github.com/sashabaranov/go-gpt3"
+	gpt3 "github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 )
 
@@ -52,14 +52,18 @@ Examples:
   chatgpt -c ...
 
   # model options (https://platform.openai.com/docs/api-reference/completions/create)
-  chatgpt -T 4096   # set max tokens in reponse  [0,4096]
-  chatgpt -C        # clean whitespace before sending
-  chatgpt -E        # echo back the prompt, useful for vim coding
-  chatgpt --temp    # set the temperature param  [0.0,2.0]
-  chatgpt --topp    # set the TopP param         [0.0,1.0]
-  chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
-  chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
+  chatgpt -T 4096    # set max tokens in reponse  [0,4096]
+  chatgpt -C         # clean whitespace before sending
+  chatgpt -E         # echo back the prompt, useful for vim coding
+  chatgpt --temp     # set the temperature param  [0.0,2.0]
+  chatgpt --topp     # set the TopP param         [0.0,1.0]
+  chatgpt --pres     # set the Presence Penalty   [-2.0,2.0]
+  chatgpt --freq     # set the Frequency Penalty  [-2.0,2.0]
 
+  # change model selection, available models are listed here:
+  # https://pkg.go.dev/github.com/sashabaranov/go-openai#Client.ListModels
+  chatgpt -m text-davinci-003  # set the model to text-davinci-003 (the default)
+  chatgpt -m text-ada-001      # set the model to text-ada-001
 
 `
 
@@ -72,6 +76,7 @@ var interactiveHelp = `starting interactive session...
   'topp'  set the TopP param         [0.0,1.0]
   'pres'  set the Presence Penalty   [-2.0,2.0]
   'freq'  set the Frequency Penalty  [-2.0,2.0]
+  'model' to change the selected model
 `
 
 //go:embed pretexts/*
@@ -97,6 +102,7 @@ var Temp float64
 var TopP float64
 var PresencePenalty float64
 var FrequencyPenalty float64
+var Model string
 
 func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question string) ([]string, error) {
 	if CleanPrompt {
@@ -109,7 +115,7 @@ func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question st
 	}
 
 	req := gpt3.CompletionRequest{
-		Model:            gpt3.GPT3TextDavinci003,
+		Model:            Model,
 		MaxTokens:        MaxTokens,
 		Prompt:           question,
 		Echo:             Echo,
@@ -136,7 +142,8 @@ func GetEditsResponse(client *gpt3.Client, ctx context.Context, input, instructi
 		input = strings.ReplaceAll(input, "\n", " ")
 		input = strings.ReplaceAll(input, "  ", " ")
 	}
-	m := gpt3.GPT3TextDavinci003
+
+	m := Model
 	req := gpt3.EditsRequest{
 		Model:       &m,
 		Input:       input,
@@ -222,6 +229,7 @@ type NullWriter int
 func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
 func main() {
+
 	apiKey := os.Getenv("CHATGPT_API_KEY")
 	if apiKey == "" {
 		fmt.Println("CHATGPT_API_KEY environment var is missing\nVisit https://platform.openai.com/account/api-keys to get one\n")
@@ -361,6 +369,7 @@ func main() {
 	rootCmd.Flags().Float64VarP(&TopP, "topp", "", 1.0, "set the TopP parameter")
 	rootCmd.Flags().Float64VarP(&PresencePenalty, "pres", "", 0.0, "set the Presence Penalty parameter")
 	rootCmd.Flags().Float64VarP(&FrequencyPenalty, "freq", "", 0.0, "set the Frequency Penalty parameter")
+	rootCmd.Flags().StringVarP(&Model, "model", "m", gpt3.GPT3TextDavinci003, "select the model to use with -q or -e")
 
 	// run the command
 	rootCmd.Execute()
@@ -395,6 +404,16 @@ func RunPrompt(client *gpt3.Client) error {
 			if err != nil {
 				fmt.Println(err)
 			}
+			continue
+
+		case "model":
+			if len(parts) == 1 {
+				fmt.Println("model is set to", Model)
+				continue
+			}
+
+			Model = parts[1]
+			fmt.Println("model is now", Model)
 			continue
 
 		case "tokens":
