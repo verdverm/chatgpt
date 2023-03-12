@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	gpt3 "github.com/sashabaranov/go-gpt3"
+	gpt3 "github.com/sashabaranov/go-openai"
 	"github.com/spf13/cobra"
 )
 
@@ -52,14 +52,18 @@ Examples:
   chatgpt -c ...
 
   # model options (https://platform.openai.com/docs/api-reference/completions/create)
-  chatgpt -T 4096   # set max tokens in reponse  [0,4096]
-  chatgpt -C        # clean whitespace before sending
-  chatgpt -E        # echo back the prompt, useful for vim coding
-  chatgpt --temp    # set the temperature param  [0.0,2.0]
-  chatgpt --topp    # set the TopP param         [0.0,1.0]
-  chatgpt --pres    # set the Presence Penalty   [-2.0,2.0]
-  chatgpt --freq    # set the Frequency Penalty  [-2.0,2.0]
+  chatgpt -T 4096    # set max tokens in reponse  [0,4096]
+  chatgpt -C         # clean whitespace before sending
+  chatgpt -E         # echo back the prompt, useful for vim coding
+  chatgpt --temp     # set the temperature param  [0.0,2.0]
+  chatgpt --topp     # set the TopP param         [0.0,1.0]
+  chatgpt --pres     # set the Presence Penalty   [-2.0,2.0]
+  chatgpt --freq     # set the Frequency Penalty  [-2.0,2.0]
 
+  # change model selection, available models are listed here:
+  # https://pkg.go.dev/github.com/sashabaranov/go-openai#Client.ListModels
+  chatgpt -m text-davinci-003  # set the model to text-davinci-003 (the default)
+  chatgpt -m text-ada-001      # set the model to text-ada-001
 
 `
 
@@ -72,6 +76,7 @@ var interactiveHelp = `starting interactive session...
   'topp'  set the TopP param         [0.0,1.0]
   'pres'  set the Presence Penalty   [-2.0,2.0]
   'freq'  set the Frequency Penalty  [-2.0,2.0]
+  'model' to change the selected model
 `
 
 //go:embed pretexts/*
@@ -99,36 +104,6 @@ var PresencePenalty float64
 var FrequencyPenalty float64
 var Model string
 
-// checkModel verifies that the selected mode id is one that go-gpt3 knows
-// about, producing an error if not.
-//
-// TODO: in future, this could probably leverage gpt3.Client.ListModels() to
-// support the user's fine-tuned models.
-func checkModel(m string) error {
-	knownModels := []string{
-		gpt3.GPT3TextDavinci003,
-		gpt3.GPT3TextDavinci002,
-		gpt3.GPT3TextCurie001,
-		gpt3.GPT3TextBabbage001,
-		gpt3.GPT3TextAda001,
-		gpt3.GPT3TextDavinci001,
-		gpt3.GPT3DavinciInstructBeta,
-		gpt3.GPT3Davinci,
-		gpt3.GPT3CurieInstructBeta,
-		gpt3.GPT3Curie,
-		gpt3.GPT3Ada,
-		gpt3.GPT3Babbage,
-	}
-
-	for _, v := range knownModels {
-		if m == v {
-			return nil
-		}
-	}
-
-	return fmt.Errorf("unknown model '%s', expected one of: %s", m, strings.Join(knownModels, ", "))
-}
-
 func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question string) ([]string, error) {
 	if CleanPrompt {
 		question = strings.ReplaceAll(question, "\n", " ")
@@ -137,11 +112,6 @@ func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question st
 	// insert newline at end to prevent completion of question
 	if !strings.HasSuffix(question, "\n") {
 		question += "\n"
-	}
-
-	err := checkModel(Model)
-	if err != nil {
-		return nil, err
 	}
 
 	req := gpt3.CompletionRequest{
@@ -171,11 +141,6 @@ func GetEditsResponse(client *gpt3.Client, ctx context.Context, input, instructi
 	if CleanPrompt {
 		input = strings.ReplaceAll(input, "\n", " ")
 		input = strings.ReplaceAll(input, "  ", " ")
-	}
-
-	err := checkModel(Model)
-	if err != nil {
-		return nil, err
 	}
 
 	m := Model
@@ -439,6 +404,16 @@ func RunPrompt(client *gpt3.Client) error {
 			if err != nil {
 				fmt.Println(err)
 			}
+			continue
+
+		case "model":
+			if len(parts) == 1 {
+				fmt.Println("model is set to", Model)
+				continue
+			}
+
+			Model = parts[1]
+			fmt.Println("model is now", Model)
 			continue
 
 		case "tokens":
