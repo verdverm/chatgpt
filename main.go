@@ -6,7 +6,9 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -36,14 +38,17 @@ Examples:
   # pipe content from another program, useful for ! in vim visual mode
   cat convo.txt | chatgpt
 
-  # inspect the predifined pretexts, which set ChatGPT's mood
+  # inspect the predifined prompts, which set ChatGPT's mood
   chatgpt -p list
   chatgpt -p view:<name>
 
-  # use a pretext with any of the previous modes
+  # use a prompts with any of the previous modes
   chatgpt -p optimistic -i
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
+
+	# set the directory for custom prompts
+  chatgpt -P prompts -p my-prompt -i
 
   # edit mode
   chatgpt -e ...
@@ -79,14 +84,15 @@ var interactiveHelp = `starting interactive session...
   'model' to change the selected model
 `
 
-//go:embed pretexts/*
+//go:embed prompts/*
 var predefined embed.FS
 
 var Version bool
 
 // prompt vars
 var Question string
-var Pretext string
+var Prompt string
+var PromptDir string
 var PromptMode bool
 var EditMode bool
 var CodeMode bool
@@ -103,6 +109,47 @@ var TopP float64
 var PresencePenalty float64
 var FrequencyPenalty float64
 var Model string
+
+// internal vars
+func init() {
+}
+
+
+
+/*
+func GetChatCompletionResponse(client *gpt3.Client, ctx context.Context, question string) ([]string, error) {
+	if CleanPrompt {
+		question = strings.ReplaceAll(question, "\n", " ")
+		question = strings.ReplaceAll(question, "  ", " ")
+	}
+	// insert newline at end to prevent completion of question
+	if !strings.HasSuffix(question, "\n") {
+		question += "\n"
+	}
+
+	req := gpt3.ChatCompletionRequest{
+		Model:            Model,
+		MaxTokens:        MaxTokens,
+		Prompt:           question,
+		Echo:             Echo,
+		N:                Count,
+		Temperature:      float32(Temp),
+		TopP:             float32(TopP),
+		PresencePenalty:  float32(PresencePenalty),
+		FrequencyPenalty: float32(FrequencyPenalty),
+	}
+	resp, err := client.CreateChatCompletion(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	var r []string
+	for _, c := range resp.Choices {
+		r = append(r, c.Text)
+	}
+	return r, nil
+}
+*/
 
 func GetCompletionResponse(client *gpt3.Client, ctx context.Context, question string) ([]string, error) {
 	if CleanPrompt {
@@ -236,6 +283,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	if PromptDir == "" {
+		if v := os.Getenv("CHATGPT_PROMPT_DIR"); v != "" {
+			PromptDir = v
+		}
+	}
+
 	client := gpt3.NewClient(apiKey)
 
 	rootCmd := &cobra.Command{
@@ -253,51 +306,62 @@ func main() {
 
 			// We build up PromptText as we go, based on flags
 
-			// Handle the pretext flag
-			if Pretext != "" {
+			// Handle the prompt flag
+			if Prompt != "" {
+				var files []fs.DirEntry
 
-				files, err := predefined.ReadDir("pretexts")
-				if err != nil {
-					panic(err)
+				if PromptDir == "" {
+					files, err = predefined.ReadDir("prompts")
+					if err != nil {
+						panic(err)
+					}
+				} else {
+					files, err = os.ReadDir(PromptDir)
+					if err != nil {
+						fmt.Println(err)
+						os.Exit(1)
+					}
 				}
 
 				// list and exit
-				if Pretext == "list" {
+				if Prompt == "list" {
 					for _, f := range files {
 						fmt.Println(strings.TrimSuffix(f.Name(), ".txt"))
 					}
 					os.Exit(0)
 				}
 
-				// print pretext and exit
-				if strings.HasPrefix(Pretext, "view:") {
-					name := strings.TrimPrefix(Pretext, "view:")
-					contents, err := predefined.ReadFile("pretexts/" + name + ".txt")
-					if err != nil {
-						fmt.Println(err)
-						os.Exit(1)
-					}
-					fmt.Println(string(contents))
-					os.Exit(0)
+				// are we in view mode?
+				var viewMode bool
+				if strings.HasPrefix(Prompt, "view:") {
+					Prompt = strings.TrimPrefix(Prompt, "view:")
+					viewMode = true
 				}
 
+				// read prompt pretext
+				var contents []byte
+				if PromptDir == "" {
+					contents, err = predefined.ReadFile("prompts/" + Prompt + ".txt")
+				} else {
+					contents, err = os.ReadFile(filepath.Join(PromptDir, Prompt + ".txt"))
+				}
+				if err != nil {
+					fmt.Println(err)
+					os.Exit(1)
+				}
+
+				// print and exit or...
 				// prime prompt with known pretext
-				for _, f := range files {
-					name := strings.TrimSuffix(f.Name(), ".txt")
-					if name == Pretext {
-						contents, err := predefined.ReadFile("pretexts/" + name + ".txt")
-						if err != nil {
-							fmt.Println(err)
-							os.Exit(1)
-						}
-						PromptText = string(contents)
-						break
-					}
+				if viewMode {
+					fmt.Println(string(contents))
+					os.Exit(0)
+				} else {
+					PromptText = string(contents)
 				}
 
 				// prime prompt with custom pretext
 				if PromptText == "" {
-					PromptText = Pretext
+					PromptText = Prompt
 				}
 
 			}
@@ -354,7 +418,8 @@ func main() {
 
 	// prompt releated
 	rootCmd.Flags().StringVarP(&Question, "question", "q", "", "ask a single question and print the response back")
-	rootCmd.Flags().StringVarP(&Pretext, "pretext", "p", "", "pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text")
+	rootCmd.Flags().StringVarP(&Prompt, "prompt", "p", "", "prompt to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a prompt, or otherwise supply any custom text")
+	rootCmd.Flags().StringVarP(&PromptDir, "prompt-dir", "P", "", "directory containing custom prompts, if not set the embedded defaults are used")
 	rootCmd.Flags().BoolVarP(&PromptMode, "interactive", "i", false, "start an interactive session with ChatGPT")
 	rootCmd.Flags().BoolVarP(&EditMode, "edit", "e", false, "request an edit with ChatGPT")
 	rootCmd.Flags().BoolVarP(&CodeMode, "code", "c", false, "request code completion with ChatGPT")
@@ -365,7 +430,7 @@ func main() {
 	rootCmd.Flags().IntVarP(&MaxTokens, "tokens", "T", 1024, "set the MaxTokens to generate per response")
 	rootCmd.Flags().IntVarP(&Count, "count", "C", 1, "set the number of response options to create")
 	rootCmd.Flags().BoolVarP(&Echo, "echo", "E", false, "Echo back the prompt, useful for vim coding")
-	rootCmd.Flags().Float64VarP(&Temp, "temp", "", 1.0, "set the temperature parameter")
+	rootCmd.Flags().Float64VarP(&Temp, "temp", "", 0.7, "set the temperature parameter")
 	rootCmd.Flags().Float64VarP(&TopP, "topp", "", 1.0, "set the TopP parameter")
 	rootCmd.Flags().Float64VarP(&PresencePenalty, "pres", "", 0.0, "set the Presence Penalty parameter")
 	rootCmd.Flags().Float64VarP(&FrequencyPenalty, "freq", "", 0.0, "set the Frequency Penalty parameter")
