@@ -366,9 +366,9 @@ func main() {
 
 			}
 
-			// no args, interactive, or question... read from stdin
+			// no args, or interactive... read from stdin
 			// this is mainly for replacing text in vim
-			if len(args) == 0 && !PromptMode && Question == "" {
+			if len(args) == 0 && !PromptMode {
 				reader := bufio.NewReader(os.Stdin)
 				var buf bytes.Buffer
 				for {
