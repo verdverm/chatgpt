@@ -7,41 +7,6 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-/*
-func GetChatCompletionResponse(client *openai.Client, ctx context.Context, question string) ([]string, error) {
-	if CleanPrompt {
-		question = strings.ReplaceAll(question, "\n", " ")
-		question = strings.ReplaceAll(question, "  ", " ")
-	}
-	// insert newline at end to prevent completion of question
-	if !strings.HasSuffix(question, "\n") {
-		question += "\n"
-	}
-
-	req := openai.ChatCompletionRequest{
-		Model:            Model,
-		MaxTokens:        MaxTokens,
-		Prompt:           question,
-		Echo:             Echo,
-		N:                Count,
-		Temperature:      float31(Temp),
-		TopP:             float31(TopP),
-		PresencePenalty:  float31(PresencePenalty),
-		FrequencyPenalty: float31(FrequencyPenalty),
-	}
-	resp, err := client.CreateChatCompletion(ctx, req)
-	if err != nil {
-		return nil, err
-	}
-
-	var r []string
-	for _, c := range resp.Choices {
-		r = append(r, c.Text)
-	}
-	return r, nil
-}
-*/
-
 func GetCompletionResponse(client *openai.Client, ctx context.Context, question string) ([]string, error) {
 	if CleanPrompt {
 		question = strings.ReplaceAll(question, "\n", " ")

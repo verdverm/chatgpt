@@ -66,21 +66,6 @@ Examples:
 
 `
 
-var interactiveHelp = `starting interactive session...
-  'quit' to exit
-  'save <filename>' to preserve
-	'clear' to erase the context
-	'context' to see the current context
-	'prompt' to set the context to a prompt
-  'tokens' to change the MaxToken param
-  'count' to change number of responses
-  'temp'  set the temperature param  [0.0,2.0]
-  'topp'  set the TopP param         [0.0,1.0]
-  'pres'  set the Presence Penalty   [-2.0,2.0]
-  'freq'  set the Frequency Penalty  [-2.0,2.0]
-  'model' to change the selected model
-`
-
 var Version bool
 
 // prompt vars
@@ -212,9 +197,7 @@ func main() {
 
 			// interactive or file mode
 			if PromptMode {
-				fmt.Println(interactiveHelp)
-				fmt.Println(PromptText)
-				err = RunPrompt(client)
+				err = RunInteractive(client)
 			} else {
 				// empty filename (no args) prints to stdout
 				err = RunOnce(client, filename)
