@@ -37,7 +37,7 @@ func RunInteractive(client *openai.Client) error {
 
 	// override default model in interactive | chat mode
 	if !(strings.HasPrefix(Model, "gpt-3") || strings.HasPrefix(Model, "gpt-4")) {
-		Model = "gpt-3.5-turbo-0301"
+		Model = "gpt-3.5-turbo"
 		fmt.Println("using chat compatible model:", Model, "\n")
 	}
 	fmt.Println(interactiveHelp)
