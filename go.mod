@@ -3,7 +3,7 @@ module github.com/verdverm/chatgpt
 go 1.18
 
 require (
-	github.com/sashabaranov/go-openai v1.5.0
+	github.com/sashabaranov/go-openai v1.9.0
 	github.com/spf13/cobra v1.6.1
 )
 
