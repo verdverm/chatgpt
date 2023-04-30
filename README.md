@@ -1,7 +1,13 @@
 # chatgpt
 
 CLI application for working with ChatGPT.
-Interactive or file based session with context and moods.
+Interactive or file based session with
+support for a directory of prompts.
+
+I built this for 2 reasons
+
+1. To use in vim with `!!` and stdin/out
+2. To do prompt engineering and save sessions
 
 ```
 go install github.com/verdverm/chatgpt@latest
@@ -9,15 +15,15 @@ go install github.com/verdverm/chatgpt@latest
 chatgpt -h
 ```
 
-Set `CHATGPT_API_KEY`, which you can get here: https://platform.openai.com/account/api-keys
+Set `OPENAI_API_KEY`, which you can get here: https://platform.openai.com/account/api-keys
 
 ## Examples:
 
 ```
-Chat with ChatGPT in console.
+Work with ChatGPT in console.
 
 Examples:
-  # start an interactive session
+  # start an interactive session with gpt-3.5 or gpt-4
   chatgpt -i
 
   # ask chatgpt for a one-time response
@@ -34,11 +40,14 @@ Examples:
   # pipe content from another program, useful for ! in vim visual mode
   cat convo.txt | chatgpt
 
-  # inspect the predifined pretexts, which set ChatGPT's mood
+	# set the directory for custom prompts, defaults to "prompts"
+  chatgpt -P custom-prompts -p my-prompt -i
+
+  # inspect the predifined prompts, which set ChatGPT's mood
   chatgpt -p list
   chatgpt -p view:<name>
 
-  # use a pretext with any of the previous modes
+  # use a prompts with any of the previous modes
   chatgpt -p optimistic -i
   chatgpt -p cynic -q "Is the world going to be ok?"
   chatgpt -p teacher convo.txt
@@ -67,29 +76,31 @@ Usage:
   chatgpt [file] [flags]
 
 Flags:
-  -x, --clean             remove excess whitespace from prompt before sending
-  -c, --code              request code completion with ChatGPT
-  -C, --count int         set the number of response options to create (default 1)
-  -E, --echo              Echo back the prompt, useful for vim coding
-  -e, --edit              request an edit with ChatGPT
-      --freq float        set the Frequency Penalty parameter
-  -h, --help              help for chatgpt
-  -i, --interactive       start an interactive session with ChatGPT
-  -m, --model string      select the model to use with -q or -e (default "text-davinci-003")
-      --pres float        set the Presence Penalty parameter
-  -p, --pretext string    pretext to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a pretext, or otherwise supply any custom text
-  -q, --question string   ask a single question and print the response back
-      --temp float        set the temperature parameter (default 1)
-  -T, --tokens int        set the MaxTokens to generate per response (default 1024)
-      --topp float        set the TopP parameter (default 1)
-      --version           print version information
-  -w, --write             write response to end of context file
+  -x, --clean               remove excess whitespace from prompt before sending
+  -C, --count int           set the number of response options to create (default 1)
+  -E, --echo                Echo back the prompt, useful for vim coding
+  -e, --edit                request an edit with ChatGPT
+      --freq float          set the Frequency Penalty parameter
+  -h, --help                help for chatgpt
+  -i, --interactive         start an interactive session with ChatGPT
+  -m, --model string        select the model to use with -q or -e (default "text-davinci-003")
+      --pres float          set the Presence Penalty parameter
+  -p, --prompt string       prompt to add to ChatGPT input, use 'list' or 'view:<name>' to inspect predefined, '<name>' to use a prompt, or otherwise supply any custom text
+  -P, --prompt-dir string   directory containing custom prompts, if not set the embedded defaults are used (default "prompts")
+  -q, --question string     ask a single question and print the response back
+      --temp float          set the temperature parameter (default 0.7)
+  -T, --tokens int          set the MaxTokens to generate per response (default 1024)
+      --topp float          set the TopP parameter (default 1)
+      --version             print version information
+  -w, --write               write response to end of context file
 ```
 
 ### Pretexts:
 
+Set `CHATGPT_PROMPT_DIR` to set the default for `-P/--prompt-dir`
+
 ```
-$ chatgpt -p list
+$ chatgpt -p list -P ./prompts
 coding
 cynic
 liar
@@ -103,9 +114,14 @@ thoughtful
 
 ```
 $ chatgpt -i
+using chat compatible model: gpt-3.5-turbo 
+
 starting interactive session...
   'quit' to exit
   'save <filename>' to preserve
+  'clear' to erase the context
+  'context' to see the current context
+  'prompt' to set the context to a prompt
   'tokens' to change the MaxToken param
   'count' to change number of responses
   'temp'  set the temperature param  [0.0,2.0]
@@ -119,9 +135,11 @@ starting interactive session...
 
 ## Prompt Engineering:
 
+- https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/
 - https://github.com/dair-ai/Prompt-Engineering-Guide
 - https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
 
 ## Contributions:
 
-Feel free to offer interesting pretexts or anything else
+Happily accepting interesting prompts, code improvements, or anything else
+

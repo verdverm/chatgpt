@@ -69,6 +69,10 @@ func RunInteractive(client *openai.Client) error {
 		question := scanner.Text()
 		parts := strings.Fields(question)
 
+		if len(parts) < 1 {
+			continue
+		}
+
 		// look for commands
 		switch parts[0] {
 		case "quit", "q", "exit":

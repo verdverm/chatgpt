@@ -12,10 +12,10 @@ import (
 )
 
 var LongHelp = `
-Chat with ChatGPT in console.
+Work with ChatGPT in console.
 
 Examples:
-  # start an interactive session
+  # start an interactive session with gpt-3.5 or gpt-4
   chatgpt -i
 
   # ask chatgpt for a one-time response
@@ -122,9 +122,9 @@ func (NullWriter) Write([]byte) (int, error) { return 0, nil }
 
 func main() {
 
-	apiKey := os.Getenv("CHATGPT_API_KEY")
+	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
-		fmt.Println("CHATGPT_API_KEY environment var is missing\nVisit https://platform.openai.com/account/api-keys to get one\n")
+		fmt.Println("OPENAI_API_KEY environment var is missing\nVisit https://platform.openai.com/account/api-keys to get one\n")
 		os.Exit(1)
 	}
 
