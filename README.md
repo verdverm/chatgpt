@@ -136,6 +136,7 @@ starting interactive session...
 ## Prompt Engineering:
 
 - https://www.deeplearning.ai/short-courses/chatgpt-prompt-engineering-for-developers/
+- https://learnprompting.org/
 - https://github.com/dair-ai/Prompt-Engineering-Guide
 - https://old.reddit.com/r/ChatGPT/comments/10tevu1/new_jailbreak_proudly_unveiling_the_tried_and/
 
