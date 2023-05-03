@@ -168,7 +168,9 @@ func main() {
 
 			// no args, or interactive... read from stdin
 			// this is mainly for replacing text in vim
-			if len(args) == 0 && !PromptMode {
+			fi, _ := os.Stdin.Stat()
+			inputIsFromPipe = (fi.Mode() & os.ModeCharDevice) == 0
+			if len(args) == 0 && !PromptMode && inputIsFromPipe {
 				reader := bufio.NewReader(os.Stdin)
 				var buf bytes.Buffer
 				for {
